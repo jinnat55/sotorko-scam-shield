@@ -1,9 +1,10 @@
 (function () {
   'use strict';
   var lang = 'bn';
-  try { lang = localStorage.getItem('sotorko-lang') || 'bn'; } catch (e) {}
+  try { lang = localStorage.getItem('sotorko-lang') || 'en'; } catch (e) {}
   if (!/^(bn|en)$/.test(lang)) lang = 'bn';
 
+  function stext(s) { return lang === 'en' && s.textEn ? s.textEn : s.text; }
   var T = {
     bn: {
       eyebrow: 'বাংলা + ইংরেজি · অফলাইনে চলে · ১০০% প্রাইভেট', h1a: 'ভুয়া মেসেজ চিনুন,', h1b: 'প্রতারণা থেকে বাঁচুন।',
@@ -112,7 +113,7 @@
     var c = $('chips'); c.innerHTML = '<span class="hint">' + esc(t('ex')) + '</span>';
     window.SotorkoSamples.forEach(function (s) {
       var b = document.createElement('button'); b.className = 'chip'; b.textContent = s.name[lang];
-      b.onclick = function () { $('input').value = s.text; run(); };
+      b.onclick = function () { $('input').value = stext(s); run(); };
       c.appendChild(b);
     });
   }
@@ -189,14 +190,14 @@
   function renderQuiz(keep) {
     if (!qOrder.length) qOrder = shuffle(window.SotorkoSamples);
     var s = qOrder[qi % qOrder.length];
-    $('quizMsg').textContent = s.text;
+    $('quizMsg').textContent = stext(s);
     $('quizScore').textContent = digits(qRight) + ' / ' + digits(qTotal) + ' ' + t('correct');
     if (!keep || !answered) { $('quizFb').classList.add('hidden'); $('qNext').classList.add('hidden'); $('qScam').disabled = $('qSafe').disabled = false; answered = false; }
     else showFeedback(s, lastGuess);
   }
   var lastGuess = null;
   function showFeedback(s, guess) {
-    var r = Sotorko.analyze(s.text), ok = (guess === s.scam);
+    var r = Sotorko.analyze(stext(s)), ok = (guess === s.scam);
     var h = '<div class="' + (ok ? 'ok' : 'bad') + '"><b>' + (ok ? t('right') : t('wrong')) + '</b> ' + (s.scam ? t('isScam') : t('isSafe')) + '</div>';
     h += '<div class="score" style="margin:6px 0">' + t('engine') + digits(r.score) + '/100 · ' + esc(r.level[lang]) + '</div>';
     if (r.hits.length) h += '<ul class="clean">' + r.hits.slice().sort(function (a, b) { return b.weight - a.weight; }).map(function (x) { return '<li>' + esc(x.label[lang]) + '</li>'; }).join('') + '</ul>';
@@ -219,7 +220,7 @@
     };
   });
   $('scanBtn').onclick = run;
-  $('demoBtn').onclick = function () { $('input').value = window.SotorkoSamples[0].text; document.getElementById('scanner').scrollIntoView({ behavior: 'smooth' }); setTimeout(run, 500); };
+  $('demoBtn').onclick = function () { $('input').value = stext(window.SotorkoSamples[0]); document.getElementById('scanner').scrollIntoView({ behavior: 'smooth' }); setTimeout(run, 500); };
   $('clearBtn').onclick = function () { $('input').value = ''; $('result').classList.add('hidden'); lastReport = null; $('input').focus(); };
   $('input').addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') run(); });
   $('shareBtn').onclick = function () { copy(shareText()).then(function () { $('shareOk').textContent = t('copied'); }); };
